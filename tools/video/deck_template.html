@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SkillGraph — Animated Demo Deck (v2)</title>
+<style>
+  :root{
+    --bg:#0c0e11; --panel:#13161b; --panel2:#171b21; --line:#272c34;
+    --ink:#f4f1ea; --dim:#a49e90; --faint:#6f6a5e;
+    --red:#e5322d; --amber:#f2b134;
+    --sans:"Noto Sans","DejaVu Sans",Arial,sans-serif;
+    --mono:"DejaVu Sans Mono","Noto Sans Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+  #glow{position:absolute;inset:0;background:
+    radial-gradient(1150px 640px at 50% 26%, rgba(242,177,52,.055), rgba(242,177,52,0) 65%),
+    radial-gradient(950px 720px at 86% 92%, rgba(229,50,45,.05), rgba(229,50,45,0) 60%),
+    radial-gradient(closest-side at 50% 50%, #101318, var(--bg));}
+  #grid{position:absolute;inset:0;opacity:.35;background:
+    linear-gradient(rgba(244,241,234,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244,241,234,.028) 1px, transparent 1px);
+    background-size:64px 64px}
+  .scene{position:absolute;inset:0;opacity:0}
+  .kicker{font-family:var(--mono);letter-spacing:.34em;text-transform:uppercase;color:var(--red);font-size:21px}
+  .kicker.amber{color:var(--amber)} .kicker.dim{color:var(--dim)}
+  .scenehead{position:absolute;top:84px;left:0;width:1920px;text-align:center}
+  .scenehead .big{font-size:57px;font-weight:800;margin-top:20px;letter-spacing:-.01em}
+  .scenehead .big em{color:var(--amber);font-style:normal}
+  .scenehead .big .rd{color:var(--red)}
+
+  /* ---------- framed terminal insert ---------- */
+  .term{background:#08090b;border:1px solid var(--line);border-radius:12px;padding:20px 28px 24px;
+    box-shadow:0 26px 60px rgba(0,0,0,.45)}
+  .term .tbar{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .term .tbar span.dot{width:13px;height:13px;border-radius:50%;display:block}
+  .term .tfile{font-family:var(--mono);font-size:16px;color:var(--faint);margin-left:12px;letter-spacing:.06em}
+  .term .tl{font-family:var(--mono);font-size:20px;line-height:1.42;color:#cfc9ba;white-space:pre-wrap;word-break:break-word}
+  .term .tl.small{font-size:16.5px;line-height:1.45;word-break:break-all}
+  .term .tl .hl{color:var(--amber)} .term .tl .hr{color:#ff6b66}
+
+  /* ---------- S1 title ---------- */
+  #s1{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  #s1 .wordmark{font-size:158px;font-weight:800;letter-spacing:-.02em;line-height:1.02}
+  .maskline{overflow:hidden;display:block}
+  .maskline>span{display:inline-block}
+  #s1 .rule{width:600px;border-top:4px solid var(--red);margin:40px 0 34px;transform-origin:center}
+  #s1 .tagline{font-size:56px;font-weight:700;color:var(--amber)}
+  #s1 .sub{font-size:29px;color:var(--dim);margin-top:26px}
+
+  /* ---------- S2 problem ---------- */
+  #s2 .bignum{position:absolute;top:238px;width:1920px;text-align:center}
+  #s2 .bignum .n{font-size:172px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  #s2 .bignum .u{font-family:var(--mono);font-size:23px;letter-spacing:.3em;color:var(--faint);text-transform:uppercase;margin-top:14px}
+  #s2 .promptwin{position:absolute;top:520px;left:310px;width:1300px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:30px 36px}
+  #s2 .promptwin .ph{font-family:var(--mono);font-size:18px;letter-spacing:.22em;color:var(--faint);text-transform:uppercase;display:flex;justify-content:space-between}
+  #s2 .chips{display:flex;gap:14px;margin-top:24px;flex-wrap:wrap}
+  #s2 .chip{font-family:var(--mono);font-size:22px;border:1px solid var(--line);border-radius:999px;padding:10px 22px;background:var(--panel2);color:var(--ink)}
+  #s2 .chip b{color:var(--amber);font-weight:700}
+  #s2 .filltrack{height:16px;background:#0a0b0d;border:1px solid var(--line);border-radius:8px;margin-top:28px;overflow:hidden}
+  #s2 .fillbar{height:100%;width:0%;background:linear-gradient(90deg,#7d1d1a,var(--red))}
+  #s2 .caps{position:absolute;top:838px;width:1920px;display:flex;justify-content:center;gap:34px}
+  #s2 .cap{font-size:27px;font-weight:700;border:1px solid rgba(229,50,45,.55);color:#ff8a85;border-radius:10px;padding:16px 30px;background:rgba(229,50,45,.07)}
+
+  /* ---------- S3 graph build ---------- */
+  #s3 .diagram{position:absolute;top:196px;left:0;width:1920px;height:452px}
+  #s3 .node{position:absolute;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:16px 20px;min-width:200px}
+  #s3 .node .nk{font-family:var(--mono);font-size:15px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+  #s3 .node .nv{font-family:var(--mono);font-size:23px;font-weight:700;margin-top:7px;color:var(--ink);white-space:nowrap}
+  #s3 .node.amber{border-color:var(--amber);box-shadow:0 0 34px rgba(242,177,52,.16)}
+  #s3 .node.red{border-color:var(--red);box-shadow:0 0 34px rgba(229,50,45,.18)}
+  #s3 .node.red .nv{color:#ff8a85}
+  #s3 .node .sub2{font-size:19px;color:var(--dim);margin-top:5px}
+  #s3 .pill{position:absolute;font-family:var(--mono);font-size:21px;font-weight:700;border:1.5px solid var(--line);
+    border-radius:999px;padding:11px 24px;background:var(--panel2);color:var(--ink);white-space:nowrap}
+  #s3edges{position:absolute;inset:0}
+  #s3 .elabel{position:absolute;font-family:var(--mono);font-size:14.5px;letter-spacing:.18em;color:var(--faint)}
+  #s3bundle{position:absolute;left:700px;top:386px;font-family:var(--mono);font-size:22px;font-weight:700;
+    border:1.5px solid var(--amber);color:var(--amber);border-radius:10px;padding:13px 26px;background:rgba(242,177,52,.08);white-space:nowrap}
+  #s3agent{position:absolute;left:1560px;top:386px;font-family:var(--mono);font-size:22px;font-weight:700;
+    border:1.5px solid var(--line);color:var(--dim);border-radius:10px;padding:13px 26px;background:var(--panel);white-space:nowrap}
+  #s3term{position:absolute;top:676px;left:210px;width:1500px}
+
+  /* ---------- S4 MCP ---------- */
+  #s4 .flow{position:absolute;top:238px;width:1920px;display:flex;justify-content:center;align-items:center;gap:0}
+  #s4 .fbox{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:26px 34px;text-align:center;min-width:330px}
+  #s4 .fbox .fk{font-family:var(--mono);font-size:15px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+  #s4 .fbox .fv{font-family:var(--mono);font-size:27px;font-weight:700;margin-top:9px}
+  #s4 .fbox.amber{border-color:var(--amber)}
+  #s4 .farrow{width:190px;position:relative;height:44px;margin:0 6px}
+  #s4 .farrow .track{position:absolute;top:20px;left:0;width:190px;border-top:3px solid var(--line)}
+  #s4 .farrow .pulse{position:absolute;top:13px;width:17px;height:17px;border-radius:50%;background:var(--amber);box-shadow:0 0 16px rgba(242,177,52,.8)}
+  #s4 .farrow .flab{position:absolute;top:-24px;width:190px;text-align:center;font-family:var(--mono);font-size:16px;color:var(--dim)}
+  #s4 .results{position:absolute;top:432px;width:1920px;display:flex;justify-content:center;gap:16px}
+  #s4 .rchip{font-family:var(--mono);font-size:21px;border:1px solid var(--amber);color:var(--amber);border-radius:999px;padding:9px 22px;background:rgba(242,177,52,.06)}
+  #s4term{position:absolute;top:528px;left:210px;width:1500px}
+  #s4 .scope{position:absolute;top:946px;left:210px;width:1500px;border:1px solid rgba(242,177,52,.6);border-radius:10px;
+    padding:15px 24px;font-size:19.5px;line-height:1.45;color:var(--ink);background:rgba(242,177,52,.05)}
+  #s4 .scope b{color:var(--amber);font-family:var(--mono);font-size:16px;letter-spacing:.2em}
+
+  /* ---------- S5 bundles ---------- */
+  #s5 .bars{position:absolute;top:252px;left:190px;width:1540px}
+  #s5 .brow{display:flex;align-items:center;margin-bottom:21px}
+  #s5 .bname{font-family:var(--mono);font-size:21px;width:270px;color:var(--dim);text-align:right;padding-right:24px;white-space:nowrap}
+  #s5 .btrack{flex:1;height:44px;background:#0a0b0d;border:1px solid var(--line);border-radius:8px;position:relative}
+  #s5 .bfill{height:100%;border-radius:7px;width:0%}
+  #s5 .bval{font-family:var(--mono);font-size:22px;font-weight:700;width:340px;padding-left:22px;white-space:nowrap;line-height:1.2}
+  #s5 .bval .sv{color:var(--amber)} #s5 .bval .sv2{display:block;color:var(--faint);font-size:16px;font-weight:400;margin-top:3px}
+  #s5 .bfill.pre{background:linear-gradient(90deg,#5c2320,#a02c27)}
+  #s5 .bfill.bun{background:linear-gradient(90deg,#8a5d14,var(--amber))}
+  #s5 .marker{position:absolute;top:-9px;bottom:-9px;width:0;border-left:2.5px dashed var(--ink);opacity:.65}
+  #s5 .markerlab{position:absolute;top:-34px;font-family:var(--mono);font-size:15.5px;color:var(--dim);white-space:nowrap;transform:translateX(-50%)}
+  #s5term{position:absolute;top:800px;left:210px;width:1500px}
+
+  /* ---------- S6 time travel ---------- */
+  #s6 .tlwrap{position:absolute;top:300px;left:0;width:1920px;height:400px}
+  #s6 .tline2{position:absolute;top:64px;left:150px;width:1620px;border-top:3px solid var(--line)}
+  #s6 .vcard{position:absolute;width:470px;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:26px 30px}
+  #s6 .vcard .vd{font-family:var(--mono);font-size:17px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
+  #s6 .vcard .vl{font-size:37px;font-weight:800;margin:10px 0 8px}
+  #s6 .vcard .vt{font-size:21.5px;color:var(--dim);line-height:1.4}
+  #s6 .vcard .vdot{position:absolute;top:-46px;left:50%;margin-left:-11px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:4px solid var(--faint)}
+  #s6 .vcard.amber{border-color:var(--amber)} #s6 .vcard.amber .vl{color:var(--amber)} #s6 .vcard.amber .vdot{border-color:var(--amber)}
+  #s6 .vcard.red{border-color:var(--red)} #s6 .vcard.red .vl{color:#ff8a85} #s6 .vcard.red .vdot{border-color:var(--red)}
+  #s6 .sup{position:absolute;font-family:var(--mono);font-size:15.5px;letter-spacing:.16em;color:var(--faint)}
+  #s6 .slots{position:absolute;top:716px;width:1920px;text-align:center}
+  #s6 .slots .sn{font-size:64px;font-weight:800}
+  #s6 .slots .sl{font-family:var(--mono);font-size:19px;letter-spacing:.3em;color:var(--faint);text-transform:uppercase;margin-top:4px}
+  #s6term{position:absolute;top:838px;left:210px;width:1500px}
+
+  /* ---------- S7 measured ---------- */
+  #s7 .cards{position:absolute;top:262px;width:1920px;display:flex;justify-content:center;gap:36px}
+  #s7 .card{position:relative;width:520px;min-height:330px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:38px 42px}
+  #s7 .card .lab{font-family:var(--mono);font-size:17.5px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+  #s7 .card .num{font-size:86px;font-weight:800;margin:22px 0 10px;line-height:1}
+  #s7 .card .cap{font-size:22.5px;color:var(--dim);line-height:1.42}
+  #s7 .card .tagchip{display:inline-block;font-family:var(--mono);font-size:15.5px;letter-spacing:.14em;border:1px solid var(--amber);color:var(--amber);border-radius:6px;padding:5px 12px;margin-bottom:18px}
+  #s7 .stamp{position:absolute;top:118px;right:36px;border:5px solid var(--red);color:var(--red);font-family:var(--mono);
+    font-size:33px;font-weight:700;letter-spacing:.1em;padding:7px 18px;border-radius:8px;transform:rotate(-11deg);background:rgba(12,14,17,.6)}
+  #s7term{position:absolute;top:660px;left:210px;width:1500px}
+
+  /* ---------- S8 consumed ---------- */
+  #s8 .qbar{position:absolute;top:216px;left:230px;width:1460px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 34px}
+  #s8 .qbar .qk{font-family:var(--mono);font-size:15.5px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+  #s8 .qbar .q{font-size:26px;font-style:italic;line-height:1.4;margin-top:10px}
+  #s8 .split{position:absolute;top:392px;width:1920px;display:flex;justify-content:center;gap:36px}
+  #s8 .pane{width:712px;min-height:470px;border-radius:12px;padding:32px 38px;position:relative}
+  #s8 .pane.grey{background:#101216;border:1.5px solid var(--line);color:var(--dim)}
+  #s8 .pane.amber{background:var(--panel);border:1.5px solid var(--amber);box-shadow:0 0 44px rgba(242,177,52,.1)}
+  #s8 .pane .ph2{font-family:var(--mono);font-size:18px;letter-spacing:.22em;text-transform:uppercase}
+  #s8 .pane.grey .ph2{color:var(--faint)} #s8 .pane.amber .ph2{color:var(--amber)}
+  #s8 .pane .quote{font-size:24.5px;line-height:1.5;margin-top:22px}
+  #s8 .pane .aline{font-size:25px;font-weight:700;line-height:1.45;margin-top:20px;color:var(--ink)}
+  #s8 .pane .aline .rd{color:#ff8a85}
+  #s8 .pane .afact{font-family:var(--mono);font-size:20.5px;line-height:1.5;margin-top:13px;color:var(--dim)}
+  #s8 .pane .afact b{color:var(--ink)}
+  #s8 .fall{margin-top:24px;font-size:21.5px;color:var(--faint);font-style:italic}
+  #s8 .foot8{position:absolute;top:916px;width:1920px;text-align:center;font-family:var(--mono);font-size:19px;color:var(--faint);letter-spacing:.08em}
+
+  /* ---------- S9 close ---------- */
+  #s9{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  #s9 .brand{font-family:var(--mono);font-size:24px;letter-spacing:.4em;color:var(--dim);text-transform:uppercase}
+  #s9 .pull{font-size:118px;font-weight:800;letter-spacing:-.015em;margin-top:30px}
+  #s9 .pull .rd{color:var(--red)}
+  #s9 .rule{width:520px;border-top:4px solid var(--red);margin:44px 0 38px;transform-origin:center}
+  #s9 .url{font-family:var(--mono);font-size:31px;color:var(--amber)}
+  #s9 .sub9{font-size:24px;color:var(--dim);margin-top:24px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div><div id="grid"></div>
+
+  <!-- S1 TITLE -->
+  <section class="scene" id="s1">
+    <div class="kicker" id="s1k">HydraDB Hackathon 2026 · Track 2 — The Agent Context Layer</div>
+    <div class="wordmark" style="margin-top:36px">
+      <span class="maskline"><span id="s1w1">SkillGraph</span></span>
+    </div>
+    <div class="rule" id="s1r"></div>
+    <div class="tagline"><span class="maskline"><span id="s1w2">Pull, don&rsquo;t preload.</span></span></div>
+    <div class="sub" id="s1t">The agent context layer on HydraDB.</div>
+  </section>
+
+  <!-- S2 PROBLEM -->
+  <section class="scene" id="s2">
+    <div class="scenehead"><div class="kicker dim">The Problem</div>
+      <div class="big" id="s2h">Every prompt carries <em>the whole catalog</em>.</div></div>
+    <div class="bignum"><div class="n" id="s2n">0</div><div class="u">bytes preloaded into every prompt</div></div>
+    <div class="promptwin" id="s2pw">
+      <div class="ph"><span>Agent prompt — session start</span><span id="s2pct">0%</span></div>
+      <div class="chips">
+        <span class="chip" id="s2c1"><b>12</b> skills</span>
+        <span class="chip" id="s2c2"><b>7</b> tools</span>
+        <span class="chip" id="s2c3"><b>2</b> MCP servers</span>
+        <span class="chip" id="s2c4"><b>16</b> entities</span>
+        <span class="chip" id="s2c5"><b>20</b> verdicts</span>
+      </div>
+      <div class="filltrack"><div class="fillbar" id="s2fill"></div></div>
+    </div>
+    <div class="caps">
+      <div class="cap" id="s2cap1">Higher token cost</div>
+      <div class="cap" id="s2cap2">Slower starts</div>
+      <div class="cap" id="s2cap3">Stale facts smuggled in as truth</div>
+    </div>
+  </section>
+
+  <!-- S3 GRAPH BUILD -->
+  <section class="scene" id="s3">
+    <div class="scenehead"><div class="kicker amber">The Graph</div>
+      <div class="big" id="s3h">A task arrives. <em>The graph answers.</em></div></div>
+    <div class="diagram">
+      <svg id="s3edges" width="1920" height="452" viewBox="0 0 1920 452">
+        <path id="e-ts1" d="M352 150 L470 108" stroke="#f2b134" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-ts2" d="M352 268 L470 322" stroke="#f2b134" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-st1" d="M880 100 L985 56" stroke="#a49e90" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-st2" d="M880 118 L985 182" stroke="#a49e90" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-st3" d="M880 136 L985 322" stroke="#a49e90" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-se"  d="M880 214 L1240 214" stroke="#a49e90" stroke-width="3" fill="none" pathLength="1"/>
+        <path id="e-ev"  d="M1516 214 L1560 214" stroke="#e5322d" stroke-width="3" fill="none" pathLength="1"/>
+      </svg>
+      <div class="elabel" style="left:384px;top:158px">NEEDS_SKILL</div>
+      <div class="elabel" style="left:868px;top:36px">USES_TOOL</div>
+      <div class="elabel" style="left:1010px;top:224px">ABOUT</div>
+      <div class="elabel" style="left:1560px;top:128px">HAS_VERDICT</div>
+      <div class="node amber" id="n-task" style="left:80px;top:172px;width:272px">
+        <div class="nk">Task</div><div class="nv">verify_free_mint</div></div>
+      <div class="node" id="n-sk1" style="left:470px;top:56px">
+        <div class="nk">Skill</div><div class="nv">bsc_free_mint_verification</div></div>
+      <div class="node" id="n-sk2" style="left:470px;top:272px">
+        <div class="nk">Skill</div><div class="nv">bsc_contract_call_construction</div></div>
+      <div class="pill" id="n-t1" style="left:990px;top:30px">baw</div>
+      <div class="pill" id="n-t2" style="left:990px;top:158px">hydradb-mcp</div>
+      <div class="pill" id="n-t3" style="left:990px;top:300px">foundry</div>
+      <div class="node" id="n-ent" style="left:1240px;top:172px;width:276px">
+        <div class="nk">Entity</div><div class="nv">Ink Koi (INKOI)</div></div>
+      <div class="node red" id="n-ver" style="left:1560px;top:158px;width:320px">
+        <div class="nk">Current verdict</div><div class="nv">indikasi — CLOSED</div>
+        <div class="sub2">freeMinted 2,777/2,777 on-chain</div></div>
+      <div id="s3bundle">CONTEXT BUNDLE · <span id="s3bnum">0</span> B</div>
+      <div id="s3agent">AGENT</div>
+    </div>
+    <div class="term" id="s3term">
+      <div class="tbar"><span class="dot" style="background:#e5322d"></span><span class="dot" style="background:#f2b134"></span><span class="dot" style="background:#a49e90"></span><span class="tfile">demo.py — Demo A · real captured output (demo-output.txt)</span></div>
+      <div id="s3lines"></div>
+    </div>
+  </section>
+
+  <!-- S4 MCP -->
+  <section class="scene" id="s4">
+    <div class="scenehead"><div class="kicker">No Custom API</div>
+      <div class="big" id="s4h">Same traversals. <em>Stock MCP server.</em> Unmodified.</div></div>
+    <div class="flow">
+      <div class="fbox" id="s4b1"><div class="fk">Client</div><div class="fv">MCP client</div></div>
+      <div class="farrow"><div class="flab">execute_query</div><div class="track"></div><div class="pulse" id="s4p1"></div></div>
+      <div class="fbox amber" id="s4b2"><div class="fk">Stock server</div><div class="fv">hydradb-mcp 0.1.0</div></div>
+      <div class="farrow"><div class="flab">Cypher</div><div class="track"></div><div class="pulse" id="s4p2"></div></div>
+      <div class="fbox" id="s4b3"><div class="fk">Store</div><div class="fv">HydraDB</div></div>
+    </div>
+    <div class="results">
+      <span class="rchip" id="s4r1">skill → bsc_free_mint_verification</span>
+      <span class="rchip" id="s4r2">tool → foundry</span>
+      <span class="rchip" id="s4r3">superseded → 7004 · current → 7005</span>
+    </div>
+    <div class="term" id="s4term">
+      <div class="tbar"><span class="dot" style="background:#e5322d"></span><span class="dot" style="background:#f2b134"></span><span class="dot" style="background:#a49e90"></span><span class="tfile">docs/mcp-exchange.log — verbatim excerpts</span></div>
+      <div id="s4lines"></div>
+    </div>
+    <div class="scope" id="s4scope"><b>SCOPE NOTE&nbsp;&nbsp;</b>Because of the tenant-keyspace split, the recorded MCP exchange runs on a 6-node slice (one task type, skill, tool and entity, two verdicts) provisioned through <i>execute_query</i> itself. It proves the protocol path and the traversal shapes end-to-end; the full 62-node graph is served over the HTTP API.</div>
+  </section>
+
+  <!-- S5 BUNDLES -->
+  <section class="scene" id="s5">
+    <div class="scenehead"><div class="kicker amber">Sized to the Task</div>
+      <div class="big" id="s5h">Pull only <em>what the task needs</em>.</div></div>
+    <div class="bars">
+      <div class="brow" id="s5r0"><div class="bname">FULL PRELOAD</div>
+        <div class="btrack"><div class="bfill pre" id="s5f0"></div>
+          <div class="marker" id="s5mk" style="left:90.8%"><div class="markerlab">current-state preload · 10,095 B</div></div></div>
+        <div class="bval"><span id="s5v0">0</span> B</div></div>
+      <div class="brow" id="s5r1"><div class="bname">backtest_strategy</div>
+        <div class="btrack"><div class="bfill bun" id="s5f1"></div></div>
+        <div class="bval"><span id="s5v1">0</span> B · <span class="sv" id="s5p1">0%</span> <span class="sv2" id="s5p1b"></span></div></div>
+      <div class="brow" id="s5r2"><div class="bname">build_demo_site</div>
+        <div class="btrack"><div class="bfill bun" id="s5f2"></div></div>
+        <div class="bval"><span id="s5v2">0</span> B · <span class="sv" id="s5p2">0%</span> <span class="sv2" id="s5p2b"></span></div></div>
+      <div class="brow" id="s5r3"><div class="bname">play_agent_cards</div>
+        <div class="btrack"><div class="bfill bun" id="s5f3"></div></div>
+        <div class="bval"><span id="s5v3">0</span> B · <span class="sv" id="s5p3">0%</span> <span class="sv2" id="s5p3b"></span></div></div>
+      <div class="brow" id="s5r4"><div class="bname">hunt_bounty</div>
+        <div class="btrack"><div class="bfill bun" id="s5f4"></div></div>
+        <div class="bval"><span id="s5v4">0</span> B · <span class="sv" id="s5p4">0%</span> <span class="sv2" id="s5p4b"></span></div></div>
+      <div class="brow" id="s5r5"><div class="bname">verify_free_mint</div>
+        <div class="btrack"><div class="bfill bun" id="s5f5"></div></div>
+        <div class="bval"><span id="s5v5">0</span> B · <span class="sv" id="s5p5">0%</span> <span class="sv2" id="s5p5b"></span></div></div>
+    </div>
+    <div class="term" id="s5term">
+      <div class="tbar"><span class="dot" style="background:#e5322d"></span><span class="dot" style="background:#f2b134"></span><span class="dot" style="background:#a49e90"></span><span class="tfile">demo.py — Demo C · real captured output (demo-output.txt)</span></div>
+      <div id="s5lines"></div>
+    </div>
+  </section>
+
+  <!-- S6 TIME TRAVEL -->
+  <section class="scene" id="s6">
+    <div class="scenehead"><div class="kicker">The Graph Remembers</div>
+      <div class="big" id="s6h">Verdicts have a history. <em>Ask at any moment.</em></div></div>
+    <div class="tlwrap">
+      <div class="tline2" id="s6line"></div>
+      <div class="vcard amber" id="s6c1" style="left:120px;top:110px"><div class="vdot"></div>
+        <div class="vd">Nov 11 · Verdict</div><div class="vl">berpotensi</div>
+        <div class="vt">Free pool draining — <b>243</b> of 2,777 free slots left</div></div>
+      <div class="sup" id="s6sup1" style="left:636px;top:24px">SUPERSEDES →</div>
+      <div class="vcard amber" id="s6c2" style="left:725px;top:110px"><div class="vdot"></div>
+        <div class="vd">Nov 13 · Verdict</div><div class="vl">berpotensi</div>
+        <div class="vt">Free pool nearly gone — <b>135</b> of 2,777 free slots left</div></div>
+      <div class="sup" id="s6sup2" style="left:1241px;top:24px">SUPERSEDES →</div>
+      <div class="vcard red" id="s6c3" style="left:1330px;top:110px"><div class="vdot"></div>
+        <div class="vd">Today · Verdict</div><div class="vl">indikasi</div>
+        <div class="vt">Free lane <b>CLOSED</b> — freeMinted 2,777/2,777 on-chain</div></div>
+    </div>
+    <div class="slots"><div class="sn" id="s6n">2,777</div><div class="sl">free slots left — Ink Koi</div></div>
+    <div class="term" id="s6term">
+      <div class="tbar"><span class="dot" style="background:#e5322d"></span><span class="dot" style="background:#f2b134"></span><span class="dot" style="background:#a49e90"></span><span class="tfile">demo.py — Demo B · real captured output (demo-output.txt)</span></div>
+      <div id="s6lines"></div>
+    </div>
+  </section>
+
+  <!-- S7 MEASURED -->
+  <section class="scene" id="s7">
+    <div class="scenehead"><div class="kicker dim">Measured, Not Claimed</div>
+      <div class="big" id="s7h">A <em>loopback sanity run</em> — and a staleness guard.</div></div>
+    <div class="cards">
+      <div class="card" id="s7c1"><span class="tagchip">LOOPBACK · DEBUG BUILD</span>
+        <div class="lab">Traversal queries</div><div class="num" id="s7n1">0</div>
+        <div class="cap"><b style="color:var(--ink)">0 errors</b> · avg 17.27 ms · max 38.29 ms<br>62-node reference graph, same box</div></div>
+      <div class="card" id="s7c2"><span class="tagchip">SYNTHETIC GRAPH · 5,000 NODES</span>
+        <div class="lab">Concurrent throughput</div><div class="num"><span id="s7n2">0</span><span style="font-size:40px;color:var(--dim)"> ops/s</span></div>
+        <div class="cap">1,000 ops · 8 parallel clients · <b style="color:var(--ink)">0 errors, 0 wrong results</b></div></div>
+      <div class="card" id="s7c3"><span class="tagchip">STALENESS GUARD</span>
+        <div class="lab">Verdicts past threshold</div><div class="num" style="font-size:64px;padding-top:16px">dropped,<br>with the reason</div>
+        <div class="cap">The agent re-verifies instead of trusting yesterday&rsquo;s facts.</div>
+        <div class="stamp" id="s7stamp">STALE</div></div>
+    </div>
+    <div class="term" id="s7term">
+      <div class="tbar"><span class="dot" style="background:#e5322d"></span><span class="dot" style="background:#f2b134"></span><span class="dot" style="background:#a49e90"></span><span class="tfile">demo.py — Demos D + E · real captured output (demo-output.txt)</span></div>
+      <div id="s7lines"></div>
+    </div>
+  </section>
+
+  <!-- S8 CONSUMED -->
+  <section class="scene" id="s8">
+    <div class="scenehead"><div class="kicker amber">Consumed, Not Just Printed</div>
+      <div class="big" id="s8h">Same model. Same question. <em>One run each.</em></div></div>
+    <div class="qbar" id="s8q"><div class="qk">The question — asked of gemini-3.5-flash-lite</div>
+      <div class="q">&ldquo;Can I still mint Ink Koi for free right now? How many free slots are left, and if I proceed, what exactly should I check before signing anything?&rdquo;</div></div>
+    <div class="split">
+      <div class="pane grey" id="s8a"><div class="ph2">Without the bundle</div>
+        <div class="quote" id="s8quote"></div>
+        <div class="fall" id="s8fall">→ falls back to a generic safety checklist</div></div>
+      <div class="pane amber" id="s8b"><div class="ph2">With the bundle · 1,066 B</div>
+        <div class="aline" id="s8l1">No — the free lane is <span class="rd">CLOSED</span>.</div>
+        <div class="afact" id="s8l2"><b>0 slots left</b> — free pool exhausted (2,777 / 2,777 claimed on-chain)</div>
+        <div class="afact" id="s8l3">Paid lane <b>0.0004 BNB</b> · max 5 per wallet · supply 2,786/5,555</div>
+        <div class="afact" id="s8l4">Contract <b>0xbd4b…200a9</b> — cited from the bundle itself</div>
+        <div class="afact" id="s8l5">Pre-signing checks from the bundle&rsquo;s own skills: <b>bsc_contract_call_construction</b> · baw · foundry</div></div>
+    </div>
+    <div class="foot8" id="s8foot">Verbatim answers: docs/agent-consumer-transcript.md · the bundle buys provenance and freshness, not IQ</div>
+  </section>
+
+  <!-- S9 CLOSE -->
+  <section class="scene" id="s9">
+    <div class="brand" id="s9k">SkillGraph</div>
+    <div class="pull"><span class="maskline"><span id="s9w">Pull, don&rsquo;t <span class="rd">preload</span>.</span></span></div>
+    <div class="rule" id="s9r"></div>
+    <div class="url" id="s9u">github.com/Revaaa28/skillgraph</div>
+    <div class="sub9" id="s9t">Built on HydraDB · HydraDB Hackathon 2026 · Track 2 — the agent context layer</div>
+  </section>
+</div>
+
+<script>
+"use strict";
+const TIMING = __TIMING_JSON__;
+const EV = __EVIDENCE_JSON__;
+const $ = id => document.getElementById(id);
+const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+const P = (t,a,b) => clamp01((t-a)/(b-a));
+const eoc = p => 1 - Math.pow(1-p,3);
+const eob = p => { const c=1.70158, u=p-1; return 1 + (c+1)*u*u*u + c*u*u; };
+const eio = p => p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function fly(el,t,a,b,dy){ const p=P(t,a,b), e=eoc(p);
+  el.style.opacity=p; el.style.transform=`translateY(${(1-e)*dy}px)`; }
+function pop(el,t,a,b){ const p=P(t,a,b); if(p<=0){el.style.opacity=0;return;}
+  const e=eob(p); el.style.opacity=Math.min(1,p*1.7);
+  el.style.transform=`scale(${0.5+0.5*e})`; }
+function fade(el,t,a,b){ el.style.opacity=P(t,a,b); }
+function scene(el,t,key,last){ const s=TIMING[key]; let o=P(t,s.start,s.start+0.45);
+  if(!last) o*=1-P(t,s.end-0.45,s.end); el.style.opacity=o; }
+function cnt(el,t,a,b,target){ el.textContent = fmt(eoc(P(t,a,b))*target); }
+function maskUp(el,t,a,b){ const p=P(t,a,b), e=eoc(p);
+  el.style.transform=`translateY(${(1-e)*112}%)`; }
+function drawEdge(el,t,a,b){ const p=P(t,a,b);
+  el.style.strokeDasharray=1; el.style.strokeDashoffset=1-eoc(p); el.style.opacity=p; }
+function revealLines(els,t,a,b){ const n=els.length; if(!n) return;
+  const step=(b-a)/n;
+  els.forEach((el,i)=>{ const p=P(t,a+i*step,a+i*step+0.35), e=eoc(p);
+    el.style.opacity=p; el.style.transform=`translateY(${(1-e)*10}px)`; }); }
+function buildLines(cid, lines, cls, hl){
+  const box=$(cid); const els=[];
+  lines.forEach(txt=>{ const d=document.createElement('div'); d.className='tl'+(cls?' '+cls:'');
+    if(hl) txt=hl(txt); d.innerHTML=txt; d.style.opacity=0; box.appendChild(d); els.push(d); });
+  return els; }
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const L3 = buildLines('s3lines', EV.demoA.map(esc), '', s => s.replace('indikasi','<span class="hr">indikasi</span>'));
+const L4 = buildLines('s4lines', EV.mcp.map(esc), 'small');
+const L5 = buildLines('s5lines', EV.demoC.map(esc), '');
+const L6 = buildLines('s6lines', EV.demoB.map(esc), 'small');
+const L7 = buildLines('s7lines', EV.demoDE.map(esc), '', s => s.indexOf('STALE')>=0 ? '<span class="hr">'+s+'</span>' : s);
+const ELAB = Array.from(document.querySelectorAll('#s3 .elabel'));
+
+function render(t){
+  ['s1','s2','s3','s4','s5','s6','s7','s8'].forEach(k=>scene($(k),t,k,false));
+  scene($('s9'),t,'s9',true);
+  const lt = k => t - TIMING[k].start;
+
+  /* ---------- S1 ---------- */
+  { const u=lt('s1');
+    fly($('s1k'),u,0.25,0.85,24); maskUp($('s1w1'),u,0.50,1.25);
+    const rp=P(u,1.45,1.95); $('s1r').style.opacity=rp; $('s1r').style.transform=`scaleX(${eoc(rp)})`;
+    maskUp($('s1w2'),u,1.85,2.55); fly($('s1t'),u,2.90,3.55,20); }
+
+  /* ---------- S2 ---------- */
+  { const u=lt('s2');
+    fly($('s2h'),u,0.30,0.95,26);
+    cnt($('s2n'),u,1.20,4.40,11113);
+    fade($('s2n'),u,1.0,1.4);
+    fly($('s2pw'),u,2.20,2.90,36);
+    ['s2c1','s2c2','s2c3','s2c4','s2c5'].forEach((id,i)=>pop($(id),u,3.4+i*0.9,3.85+i*0.9));
+    const fp=P(u,2.60,8.60); $('s2fill').style.width=(eoc(fp)*100)+'%';
+    $('s2pct').textContent=Math.round(eoc(fp)*100)+'%';
+    const glowP=P(u,12.4,13.4); $('s2pw').style.borderColor = glowP>0.5 ? '#e5322d' : '';
+    $('s2pw').style.boxShadow = glowP>0.03 ? `0 0 ${40*glowP}px rgba(229,50,45,.22)` : '';
+    pop($('s2cap1'),u,14.8,15.30); pop($('s2cap2'),u,17.2,17.70); pop($('s2cap3'),u,19.6,20.10); }
+
+  /* ---------- S3 ---------- */
+  { const u=lt('s3');
+    fly($('s3h'),u,0.30,0.95,26);
+    pop($('n-task'),u,0.90,1.40);
+    drawEdge($('e-ts1'),u,1.90,2.50); pop($('n-sk1'),u,2.40,2.90);
+    drawEdge($('e-ts2'),u,2.90,3.50); pop($('n-sk2'),u,3.40,3.90);
+    drawEdge($('e-st1'),u,4.60,5.20); drawEdge($('e-st2'),u,4.80,5.40); drawEdge($('e-st3'),u,5.00,5.60);
+    pop($('n-t1'),u,5.20,5.65); pop($('n-t2'),u,5.80,6.25); pop($('n-t3'),u,6.40,6.85);
+    drawEdge($('e-se'),u,7.40,8.10); pop($('n-ent'),u,8.00,8.50);
+    drawEdge($('e-ev'),u,9.20,9.90); pop($('n-ver'),u,9.80,10.35);
+    fade(ELAB[0],u,2.20,2.60); fade(ELAB[1],u,5.00,5.40); fade(ELAB[2],u,7.70,8.10); fade(ELAB[3],u,9.50,9.90);
+    const bp=P(u,11.20,11.80); $('s3bundle').style.opacity=bp;
+    cnt($('s3bnum'),u,11.40,13.20,7856);
+    const mv=P(u,14.20,15.80), me=eio(mv);
+    $('s3bundle').style.transform=`translateX(${me*470}px)`;
+    $('s3bundle').style.opacity=bp*(1-P(u,15.50,16.10));
+    const ag=P(u,15.60,16.40); $('s3agent').style.borderColor = ag>0.4 ? '#f2b134' : '';
+    $('s3agent').style.color = ag>0.4 ? '#f4f1ea' : '';
+    $('s3agent').style.boxShadow = ag>0.03 ? `0 0 ${36*ag}px rgba(242,177,52,.25)` : '';
+    fly($('s3term'),u,1.20,1.80,28); revealLines(L3,u,2.60,12.50); }
+
+  /* ---------- S4 ---------- */
+  { const u=lt('s4');
+    fly($('s4h'),u,0.30,0.95,26);
+    fly($('s4b1'),u,1.00,1.55,30); fly($('s4b2'),u,1.50,2.05,30); fly($('s4b3'),u,2.00,2.55,30);
+    const pulse=(el,off)=>{ if(u<2.2){ el.style.opacity=0; return; }
+      const f=((u-2.2)*0.5+off)%1; el.style.opacity=1; el.style.left=(f*168)+'px'; };
+    pulse($('s4p1'),0); pulse($('s4p2'),0.5);
+    pop($('s4r1'),u,4.20,4.65); pop($('s4r2'),u,5.40,5.85); pop($('s4r3'),u,6.60,7.05);
+    fly($('s4term'),u,2.80,3.40,28); revealLines(L4,u,3.40,10.60);
+    fade($('s4scope'),u,10.90,11.70); }
+
+  /* ---------- S5 ---------- */
+  { const u=lt('s5');
+    fly($('s5h'),u,0.30,0.95,26);
+    const rows=[
+      {f:'s5f0',v:'s5v0',bytes:11113,pct:100,a:0.80,b:3.40},
+      {f:'s5f1',v:'s5v1',bytes:255, pct:2.29, a:4.20,b:5.60, p:'s5p1', saved:97.7, p2:'s5p1b', s2:'97.5% vs current-state preload'},
+      {f:'s5f2',v:'s5v2',bytes:373, pct:3.36, a:6.40,b:7.80, p:'s5p2', saved:96.6, p2:'s5p2b', s2:'96.3% vs current-state preload'},
+      {f:'s5f3',v:'s5v3',bytes:836, pct:7.52, a:8.40,b:9.80, p:'s5p3', saved:92.5, p2:'s5p3b', s2:'91.7% vs current-state preload'},
+      {f:'s5f4',v:'s5v4',bytes:883, pct:7.95, a:10.40,b:11.80, p:'s5p4', saved:92.1, p2:'s5p4b', s2:'91.3% vs current-state preload'},
+      {f:'s5f5',v:'s5v5',bytes:7856,pct:70.69,a:12.40,b:14.20,p:'s5p5', saved:29.3, p2:'s5p5b', s2:'22.2% vs current-state preload'}];
+    rows.forEach((r,idx)=>{ const p=P(u,r.a,r.b), e=eoc(p);
+      fly($('s5r'+idx),u,r.a-0.45,r.a,20);
+      $(r.f).style.width=(e*r.pct)+'%'; $(r.f).style.opacity=p;
+      cnt($(r.v),u,r.a,r.b,r.bytes); $(r.v).style.opacity=p;
+      if(r.p){ $(r.p).textContent=(e*r.saved).toFixed(1)+'% saved'; $(r.p).style.opacity=p;
+        const q=P(u,r.b+0.15,r.b+0.75); $(r.p2).textContent = q>0 ? r.s2 : ''; $(r.p2).style.opacity=q; } });
+    fade($('s5mk'),u,3.20,3.90);
+    fly($('s5term'),u,13.20,13.80,24); revealLines(L5,u,13.60,16.90); }
+
+  /* ---------- S6 ---------- */
+  { const u=lt('s6');
+    fly($('s6h'),u,0.30,0.95,26);
+    const lp=P(u,1.20,2.20); $('s6line').style.transform=`scaleX(${eoc(lp)})`; $('s6line').style.opacity=lp;
+    $('s6line').style.transformOrigin='left center';
+    pop($('s6c1'),u,2.40,2.95); pop($('s6c2'),u,6.40,6.95); pop($('s6c3'),u,10.40,11.00);
+    fade($('s6sup1'),u,5.90,6.40); fade($('s6sup2'),u,9.90,10.40);
+    let slots;
+    if(u<2.40) slots=2777;
+    else if(u<4.20) slots=2777-(2777-243)*eoc(P(u,2.40,4.20));
+    else if(u<6.40) slots=243;
+    else if(u<8.20) slots=243-(243-135)*eoc(P(u,6.40,8.20));
+    else if(u<10.40) slots=135;
+    else if(u<12.40) slots=135-135*eoc(P(u,10.40,12.40));
+    else slots=0;
+    $('s6n').textContent=fmt(slots);
+    $('s6n').style.color = (u>=12.40) ? '#ff8a85' : '';
+    fly($('s6term'),u,1.60,2.20,24); revealLines(L6,u,3.00,13.20); }
+
+  /* ---------- S7 ---------- */
+  { const u=lt('s7');
+    fly($('s7h'),u,0.30,0.95,26);
+    fly($('s7c1'),u,1.20,1.80,36); cnt($('s7n1'),u,1.60,3.60,200);
+    fly($('s7c2'),u,3.40,4.00,36); cnt($('s7n2'),u,3.80,6.00,197);
+    fly($('s7c3'),u,6.20,6.80,36);
+    const stp=P(u,7.40,7.85); if(stp<=0){ $('s7stamp').style.opacity=0; }
+    else { const e=eob(stp); $('s7stamp').style.opacity=Math.min(1,stp*1.8);
+      $('s7stamp').style.transform=`rotate(-11deg) scale(${2.4-1.4*e})`; }
+    fly($('s7term'),u,8.40,9.00,24); revealLines(L7,u,8.80,12.60); }
+
+  /* ---------- S8 ---------- */
+  { const u=lt('s8');
+    fly($('s8h'),u,0.30,0.95,26);
+    fly($('s8q'),u,1.10,1.70,26);
+    fly($('s8a'),u,2.20,2.85,34);
+    const q=EV.runA, chars=Math.floor(P(u,3.00,9.50)*q.length);
+    $('s8quote').textContent = '"' + q.slice(0,chars) + (chars>=q.length ? ' \u2026"' : '');
+    fade($('s8fall'),u,10.00,10.60);
+    fly($('s8b'),u,4.60,5.25,34);
+    pop($('s8l1'),u,6.20,6.65); pop($('s8l2'),u,8.60,9.05); pop($('s8l3'),u,10.60,11.05);
+    pop($('s8l4'),u,12.60,13.05); pop($('s8l5'),u,14.60,15.05);
+    fade($('s8foot'),u,16.40,17.20); }
+
+  /* ---------- S9 ---------- */
+  { const u=lt('s9');
+    fly($('s9k'),u,0.20,0.70,18); maskUp($('s9w'),u,0.50,1.25);
+    const rp=P(u,1.45,1.95); $('s9r').style.opacity=rp; $('s9r').style.transform=`scaleX(${eoc(rp)})`;
+    fly($('s9u'),u,2.20,2.85,18); fly($('s9t'),u,3.00,3.65,16); }
+
+  $('glow').style.opacity = 0.92 + 0.08*Math.sin(t*0.45);
+}
+window.__render = render;
+render(0);
+</script>
+</body>
+</html>

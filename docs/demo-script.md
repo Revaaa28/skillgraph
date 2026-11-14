@@ -7,6 +7,16 @@ is committed as `demo-output.txt` and `docs/mcp-exchange.log`). Narration:
 TTS, voice Helio (`avocado_v2:MAI_03`), exported separately as
 `docs/demo-narration.mp3`.
 
+**v2 — animated rebuild.** The shipped `docs/demo.mp4` is the animated
+version: a deterministic HTML deck rendered frame-by-frame (the NEAR
+demo-v4 recipe), with kinetic type, counting numbers, a graph that
+builds itself, and the real captured output carried as framed terminal
+inserts inside the animated scenes. Narration was regenerated per scene
+with the same voice and the same text (Scenes 1–7, 9), plus one added
+scene (Scene 8, the agent-consumer proof). Build sources and recipe:
+`tools/video/` (`gen_vo.py` → `build.py` → `render.mjs` →
+`assemble.py`).
+
 ## Scene 1 — Title (card)
 
 On screen: **SkillGraph** — *Pull, don't preload.* The agent context
@@ -84,7 +94,26 @@ excluded, with the reason printed.
 > staleness guard drops any verdict that's too old, so the agent
 > re-verifies instead of trusting yesterday's facts.
 
-## Scene 8 — Close (card)
+## Scene 8 — The bundle, consumed (animated split comparison)
+
+On screen: the question asked of gemini-3.5-flash-lite, verbatim. Left
+pane (no bundle): Run A's answer types in — "I do not have access to
+real-time blockchain data, so I cannot verify …" — falls back to a
+generic safety checklist. Right pane (with the bundle, 1,066 B): "No —
+the free lane is CLOSED." · 0 slots left (2,777 / 2,777 claimed
+on-chain) · paid lane 0.0004 BNB, max 5 per wallet · contract
+0xbd4b…200a9, cited from the bundle itself · pre-signing checks from
+the bundle's own skills. Footer: verbatim answers in
+`docs/agent-consumer-transcript.md` — the bundle buys provenance and
+freshness, not IQ.
+
+> The bundle is consumed, too. Same model, same question, one run
+> each. Without it, the model admits it cannot verify the mint, and
+> falls back to a generic checklist. With a one-thousand-sixty-six-byte
+> bundle, it answers from the verdict: free lane closed, zero slots
+> left — plus the checks to run before signing.
+
+## Scene 9 — Close (card)
 
 On screen: **Pull, don't preload.** — github.com/Revaaa28/skillgraph ·
 Built on HydraDB · HydraDB Hackathon 2026, Track 2.
