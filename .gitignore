@@ -1,0 +1,14 @@
+# secrets / local node state — never commit
+.hydradb/
+auth-token
+*token*
+*.key
+.env
+
+# python
+__pycache__/
+*.pyc
+
+# a fresh local MCP run writes ./mcp-exchange.log at repo root;
+# the committed reference copy lives in docs/ and must NOT be ignored
+/mcp-exchange.log

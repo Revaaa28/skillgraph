@@ -1,0 +1,43 @@
+{
+ "generated_at": "2026-11-14T04:35:14.554318+00:00",
+ "bundles": {
+  "verify_free_mint": {
+   "bytes": 7856,
+   "pct_saved": 29.3,
+   "stale_excluded": 0
+  },
+  "hunt_bounty": {
+   "bytes": 883,
+   "pct_saved": 92.1,
+   "stale_excluded": 0
+  },
+  "play_agent_cards": {
+   "bytes": 836,
+   "pct_saved": 92.5,
+   "stale_excluded": 0
+  },
+  "build_demo_site": {
+   "bytes": 373,
+   "pct_saved": 96.6,
+   "stale_excluded": 0
+  },
+  "backtest_strategy": {
+   "bytes": 255,
+   "pct_saved": 97.7,
+   "stale_excluded": 0
+  }
+ },
+ "full_preload_bytes": 11113,
+ "staleness_demo": {
+  "threshold_hours": 0.05,
+  "stale_excluded": 16
+ },
+ "load_test": {
+  "queries": 200,
+  "errors": 0,
+  "total_s": 3.45,
+  "avg_ms": 17.27,
+  "max_ms": 38.29,
+  "min_ms": 8.72
+ }
+}
