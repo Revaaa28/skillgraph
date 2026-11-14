@@ -67,7 +67,10 @@ The reference graph is deliberately small — 62 nodes — because it
 is one real agent's actual working set, not a synthetic benchmark.
 What the demo tests is the *shape*: currency as a chain property,
 multi-hop closure, and provenance — properties that do not appear
-at any size in a flat file or an embedding index.
+at any size in a flat file or an embedding index. The same traversal
+shapes are also measured on a labeled synthetic graph — 5,000
+nodes, 10,000 edges, 8 concurrent clients — in `METRICS.md`
+("Scale & concurrency (synthetic)").
 
 Skill→tool and task→skill edges are authored, like any tool
 registry or MCP server manifest; verdicts and their SUPERSEDES
