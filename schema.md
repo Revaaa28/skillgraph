@@ -22,11 +22,20 @@ task needs and assembles a minimal context bundle.
 
 ## Current-verdict rule
 The current verdict of an entity is the HAS_VERDICT target that no other
-verdict supersedes:
+verdict supersedes. This engine build has no `NOT EXISTS`, so the rule is
+computed as a set difference of two queries (this is exactly what
+`demo.py` runs):
 
-    MATCH (e:Entity {name: $name})-[:HAS_VERDICT]->(v:Verdict)
-    WHERE NOT EXISTS { MATCH (:Verdict)-[:SUPERSEDES]->(v) }
-    RETURN v
+    -- all verdicts of the entity
+    MATCH (e {name: $name})-[:HAS_VERDICT]->(v)
+    RETURN v.id AS vid, v.label AS label, v.detail AS detail, v.ts AS ts,
+           v.provenance AS provenance
+
+    -- verdicts that have been superseded
+    MATCH (e {name: $name})-[:HAS_VERDICT]->(old)<-[:SUPERSEDES]-(newer)
+    RETURN old.id AS vid
+
+    -- current verdict = first set minus second set
 
 ## Context bundle for a task
     MATCH (t:TaskType {name: $task})-[:NEEDS_SKILL]->(s:Skill)
