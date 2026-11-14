@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 470" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="1240" height="470" rx="14" fill="#0d1117"/>
+
+  <!-- Task -->
+  <rect x="24" y="150" width="158" height="120" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+  <text x="103" y="198" text-anchor="middle" fill="#e6edf3" font-size="24" font-weight="700">TASK</text>
+  <text x="103" y="228" text-anchor="middle" fill="#8b949e" font-size="15">a job arrives</text>
+
+  <!-- Arrow 1 -->
+  <line x1="182" y1="210" x2="252" y2="210" stroke="#3fb950" stroke-width="3"/>
+  <polygon points="252,210 238,202 238,218" fill="#3fb950"/>
+  <text x="217" y="192" text-anchor="middle" fill="#3fb950" font-size="14">traverse</text>
+
+  <!-- HydraDB store -->
+  <rect x="262" y="40" width="440" height="340" rx="12" fill="#10151d" stroke="#58a6ff" stroke-width="2"/>
+  <text x="482" y="82" text-anchor="middle" fill="#e6edf3" font-size="23" font-weight="700">HydraDB — the context graph</text>
+  <text x="482" y="108" text-anchor="middle" fill="#8b949e" font-size="14">one store for everything the agent knows</text>
+
+  <rect x="286" y="128" width="196" height="86" rx="8" fill="#161b22" stroke="#2a2f3a"/>
+  <text x="384" y="164" text-anchor="middle" fill="#e6edf3" font-size="19" font-weight="600">Skills</text>
+  <text x="384" y="190" text-anchor="middle" fill="#8b949e" font-size="13">what the agent can do</text>
+
+  <rect x="506" y="128" width="196" height="86" rx="8" fill="#161b22" stroke="#2a2f3a"/>
+  <text x="604" y="164" text-anchor="middle" fill="#e6edf3" font-size="19" font-weight="600">Tools</text>
+  <text x="604" y="190" text-anchor="middle" fill="#8b949e" font-size="13">what skills drive</text>
+
+  <rect x="286" y="230" width="196" height="86" rx="8" fill="#161b22" stroke="#2a2f3a"/>
+  <text x="384" y="266" text-anchor="middle" fill="#e6edf3" font-size="19" font-weight="600">MCP definitions</text>
+  <text x="384" y="292" text-anchor="middle" fill="#8b949e" font-size="13">served via hydradb-mcp</text>
+
+  <rect x="506" y="230" width="196" height="86" rx="8" fill="#161b22" stroke="#2a2f3a"/>
+  <text x="604" y="266" text-anchor="middle" fill="#e6edf3" font-size="19" font-weight="600">Entities + Verdicts</text>
+  <text x="604" y="292" text-anchor="middle" fill="#8b949e" font-size="13">verified facts, timestamped</text>
+
+  <text x="482" y="352" text-anchor="middle" fill="#58a6ff" font-size="14">verdict history lives on SUPERSEDES chains — in the graph, not the prompt</text>
+
+  <!-- Arrow 2 -->
+  <line x1="702" y1="210" x2="772" y2="210" stroke="#3fb950" stroke-width="3"/>
+  <polygon points="772,210 758,202 758,218" fill="#3fb950"/>
+  <text x="737" y="192" text-anchor="middle" fill="#3fb950" font-size="14">assemble</text>
+
+  <!-- Bundle -->
+  <rect x="782" y="118" width="252" height="184" rx="10" fill="#161b22" stroke="#f2b134" stroke-width="2"/>
+  <text x="908" y="152" text-anchor="middle" fill="#e6edf3" font-size="21" font-weight="700">Context bundle</text>
+  <text x="908" y="186" text-anchor="middle" fill="#3fb950" font-size="15">✓ only the skills this task needs</text>
+  <text x="908" y="216" text-anchor="middle" fill="#3fb950" font-size="15">✓ only their tools</text>
+  <text x="908" y="246" text-anchor="middle" fill="#3fb950" font-size="15">✓ current verdicts only</text>
+  <text x="908" y="276" text-anchor="middle" fill="#f2b134" font-size="15">⚠ stale facts dropped, with reason</text>
+
+  <!-- Arrow 3 -->
+  <line x1="1034" y1="210" x2="1090" y2="210" stroke="#3fb950" stroke-width="3"/>
+  <polygon points="1090,210 1076,202 1076,218" fill="#3fb950"/>
+
+  <!-- Agent -->
+  <rect x="1100" y="150" width="118" height="120" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+  <text x="1159" y="198" text-anchor="middle" fill="#e6edf3" font-size="22" font-weight="700">AGENT</text>
+  <text x="1159" y="226" text-anchor="middle" fill="#8b949e" font-size="13">small, fresh</text>
+  <text x="1159" y="246" text-anchor="middle" fill="#8b949e" font-size="13">prompt</text>
+
+  <!-- Bottom note -->
+  <text x="620" y="432" text-anchor="middle" fill="#8b949e" font-size="16">No preload: the full catalog — 11,113 bytes in our demo — stays in the graph until a task pulls its slice.</text>
+</svg>
