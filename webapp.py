@@ -9,7 +9,7 @@ arbitrary Cypher, and the node token never leaves the server.
 Run (on the box, next to the node):
     HYDRA_TOKEN_FILE=<node token file> python3 webapp.py
 """
-import html, json, os, sys, time
+import html, json, os, sys, threading, time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
@@ -239,7 +239,8 @@ def graph_nodes(fc):
         for r in fc[key]:
             nodes.append({"id": r["id"], "kind": kind, "name": r["name"]})
     for r in fc["verdicts"]:
-        nodes.append({"id": r["id"], "kind": "Verdict", "name": r["label"],
+        nodes.append({"id": r["id"], "kind": "Verdict",
+                      "name": display_label(r["label"]),
                       "detail": r["detail"], "ts": r["ts"]})
     return nodes
 
@@ -356,10 +357,19 @@ def svg_graph(nodes, edges):
     parts.append("</svg>")
     return "".join(parts)
 
+# Verdict labels are stored in the graph with the Mint RedCeh board's
+# bucket names (Indonesian). The judge UI is English, so labels are
+# translated at the display layer only — stored data is never renamed.
+LABEL_DISPLAY = {"real": "Real", "berpotensi": "Promising",
+                 "indikasi": "Flagged"}
+
+def display_label(label):
+    return LABEL_DISPLAY.get(label, label)
+
 def label_badge(label):
     cls = {"real": "b-real", "berpotensi": "b-pot",
            "indikasi": "b-ind"}.get(label, "b-def")
-    return f"<span class='badge {cls}'>{esc(label)}</span>"
+    return f"<span class='badge {cls}'>{esc(display_label(label))}</span>"
 
 def timeline_html(entity):
     vs = demo.verdicts_of(entity)
@@ -619,6 +629,73 @@ did we believe on Nov 11 — and why did it change?”</p></div>
 """
     return page(f"SkillGraph chain — {entity}", body)
 
+def route(path):
+    """Render one GET path to (body, status, content-type)."""
+    u = urlparse(path)
+    qs = parse_qs(u.query)
+    if u.path == "/graph.json":
+        fc = demo.full_catalog()
+        return (json.dumps({"nodes": graph_nodes(fc),
+                            "edges": all_edges()}),
+                200, "application/json")
+    if u.path == "/":
+        return home(), 200, "text/html; charset=utf-8"
+    if u.path == "/bundle":
+        p = bundle_page((qs.get("task") or [""])[0])
+        if p:
+            return p, 200, "text/html; charset=utf-8"
+        return (page("not found", "<h1>Unknown task</h1>"), 404,
+                "text/html; charset=utf-8")
+    if u.path == "/chain":
+        p = chain_page((qs.get("entity") or [""])[0])
+        if p:
+            return p, 200, "text/html; charset=utf-8"
+        return (page("not found", "<h1>Unknown entity</h1>"), 404,
+                "text/html; charset=utf-8")
+    return page("not found", "<h1>404</h1>"), 404, "text/html; charset=utf-8"
+
+# ---- Response cache (serve-stale-while-revalidate) ----
+# Every page above is assembled from dozens of live Cypher queries; on a
+# small instance a cold render takes seconds. Rendered 200 responses are
+# therefore kept in memory, keyed by path+query: the first hit renders
+# live, later hits are served from memory instantly, and once an entry
+# is older than CACHE_TTL a background thread re-renders it while the
+# stale copy keeps being served. The underlying store is a fixed
+# snapshot (re-seeded by hand only), so a cached page can lag the graph
+# by at most the TTL. /healthz is never cached, and only 200 responses
+# are cached — errors and 404s always render fresh.
+CACHE_TTL = float(os.environ.get("SG_CACHE_TTL", "600"))
+_cache = {}
+_cache_lock = threading.Lock()
+_cache_refreshing = set()
+
+def _cache_get(key):
+    with _cache_lock:
+        return _cache.get(key)
+
+def _cache_put(key, body, code, ctype):
+    with _cache_lock:
+        _cache[key] = (body, code, ctype, time.time())
+
+def _cache_revalidate(key):
+    with _cache_lock:
+        if key in _cache_refreshing:
+            return
+        _cache_refreshing.add(key)
+
+    def work():
+        try:
+            body, code, ctype = route(key)
+            if code == 200:
+                _cache_put(key, body, code, ctype)
+        except Exception:
+            pass
+        finally:
+            with _cache_lock:
+                _cache_refreshing.discard(key)
+
+    threading.Thread(target=work, daemon=True).start()
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -633,25 +710,22 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         u = urlparse(self.path)
-        qs = parse_qs(u.query)
         try:
             if u.path == "/healthz":
                 self._send("ok")
-            elif u.path == "/graph.json":
-                fc = demo.full_catalog()
-                self._send(json.dumps({"nodes": graph_nodes(fc),
-                                       "edges": all_edges()}),
-                           ctype="application/json")
-            elif u.path == "/":
-                self._send(home())
-            elif u.path == "/bundle":
-                p = bundle_page((qs.get("task") or [""])[0])
-                self._send(p if p else page("not found", "<h1>Unknown task</h1>"), 200 if p else 404)
-            elif u.path == "/chain":
-                p = chain_page((qs.get("entity") or [""])[0])
-                self._send(p if p else page("not found", "<h1>Unknown entity</h1>"), 200 if p else 404)
-            else:
-                self._send(page("not found", "<h1>404</h1>"), 404)
+                return
+            key = self.path
+            hit = _cache_get(key)
+            if hit is not None:
+                body, code, ctype, ts = hit
+                if time.time() - ts >= CACHE_TTL:
+                    _cache_revalidate(key)
+                self._send(body, code, ctype)
+                return
+            body, code, ctype = route(key)
+            if code == 200:
+                _cache_put(key, body, code, ctype)
+            self._send(body, code, ctype)
         except Exception as e:
             self._send(page("error", f"<h1>Live query failed</h1><pre>{esc(e)}</pre>"), 500)
 
