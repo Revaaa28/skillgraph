@@ -4,7 +4,7 @@
 
 **Evidence, up front**
 
-- **Live demo, running now:** https://skillgraph.true-hare.boxd.sh —
+- **Live demo, running now:** https://skillgraph-gzp1.onrender.com —
   run a task traversal and inspect a verdict chain against the real
   graph in your browser (served by `webapp.py` in this repo)
 - Baseline vs improvement, with the Ink Koi learning timeline:
