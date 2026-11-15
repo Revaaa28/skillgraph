@@ -95,7 +95,7 @@ svg .node:hover rect{stroke-width:2.2}
 .bars{display:flex;flex-direction:column;gap:13px}
 .bar-row{display:grid;grid-template-columns:180px 1fr 168px;gap:14px;align-items:center}
 .bar-row .bname{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
- font-size:13.5px;text-align:right;word-break:break-all}
+ font-size:13.5px;text-align:right}
 .bar-row .bname a{color:var(--txt)}
 .bar-row .bname a:hover{color:var(--blue);text-decoration:none}
 .track{height:17px;background:#1a232f;border-radius:9px;overflow:hidden}
@@ -440,9 +440,9 @@ def home():
         f"</span>{k} · {kind_count[k]}</span>" for k in
         ("TaskType", "Skill", "Tool", "MCPServer", "Entity", "Verdict"))
     bars = f"""
-<div class='bar-row pre'><div class='bname'>Full-catalog preload (baseline)</div>
+<div class='bar-row pre'><div class='bname'>Preload — full catalog</div>
 <div class='track'><div class='fill preload'></div></div>
-<div class='bval'><b>{preload:,}</b> bytes · goes stale on any verdict change</div></div>"""
+<div class='bval'><b>{preload:,}</b> bytes · baseline</div></div>"""
     for t, b, saved in bundles:
         w = max(2.0, 100.0 * b / preload)
         bars += f"""
