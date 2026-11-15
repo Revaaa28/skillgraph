@@ -1,0 +1,19 @@
+# SkillGraph — Render blueprint.
+# Render only auto-detects this file at the REPO ROOT: copy it there
+# (cp render/render.yaml ./render.yaml) before pushing, or skip the
+# blueprint and create the web service manually with these same values
+# (see render/PORT-PLAN.md for the click-by-click version).
+services:
+  - type: web
+    name: skillgraph
+    env: python
+    plan: free
+    region: singapore
+    buildCommand: bash render/build.sh
+    startCommand: bash render/start.sh
+    healthCheckPath: /healthz
+    envVars:
+      - key: HYDRA_TOKEN
+        sync: false # parent pastes a fresh >=32-char token in the dashboard
+      - key: PYTHONUNBUFFERED
+        value: "1"
