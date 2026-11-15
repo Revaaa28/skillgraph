@@ -398,8 +398,35 @@ def chips_html(names, current=None):
         out += f"<a class='{cls}' href='/chain?entity={quote(n)}'>{esc(n)}</a>"
     return f"<div class='chips'>{out}</div>"
 
-def page(title, body, script=""):
-    return ("<!DOCTYPE html><html><head><meta charset='utf-8'>"
+# Social-card (Open Graph) tags for the home page only, plus the card
+# image itself, read once at startup and served verbatim at /og.jpg.
+OG_HEAD = (
+    "<meta property='og:title' content='SkillGraph — a context layer "
+    "for AI agents'>"
+    "<meta property='og:description' content='Skills, tools and verified "
+    "verdicts in one HydraDB graph — the agent pulls only what a task "
+    "needs (255B–7.9KB instead of an 11,113B preload).'>"
+    "<meta property='og:type' content='website'>"
+    "<meta property='og:url' content='https://skillgraph-gzp1.onrender.com/'>"
+    "<meta property='og:image' content='https://skillgraph-gzp1.onrender.com/og.jpg'>"
+    "<meta name='twitter:card' content='summary_large_image'>"
+    "<meta name='twitter:title' content='SkillGraph — a context layer "
+    "for AI agents'>"
+    "<meta name='twitter:description' content='Skills, tools and verified "
+    "verdicts in one HydraDB graph — the agent pulls only what a task "
+    "needs (255B–7.9KB instead of an 11,113B preload).'>"
+    "<meta name='twitter:image' content='https://skillgraph-gzp1.onrender.com/og.jpg'>")
+
+try:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "og.jpg"), "rb") as _f:
+        OG_IMAGE = _f.read()
+except OSError:
+    OG_IMAGE = None
+
+def page(title, body, script="", extra_head=""):
+    return ("<!DOCTYPE html><html><head>" + extra_head +
+            "<meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='description' content='SkillGraph — the agent context "
             "layer on HydraDB. Live demo: real graph traversals, context "
@@ -521,7 +548,8 @@ went from “243 slots left” to “free lane CLOSED”, and the graph's curren
 answer tracked it:</p>
 {ink_timeline}</div></section>
 """
-    return page("SkillGraph — the agent context layer on HydraDB", body, SCRIPT)
+    return page("SkillGraph — the agent context layer on HydraDB", body,
+                SCRIPT, OG_HEAD)
 
 def bundle_page(task):
     if task not in TASKS:
@@ -633,6 +661,8 @@ def route(path):
     """Render one GET path to (body, status, content-type)."""
     u = urlparse(path)
     qs = parse_qs(u.query)
+    if u.path == "/og.jpg" and OG_IMAGE is not None:
+        return OG_IMAGE, 200, "image/jpeg"
     if u.path == "/graph.json":
         fc = demo.full_catalog()
         return (json.dumps({"nodes": graph_nodes(fc),
@@ -701,7 +731,7 @@ class H(BaseHTTPRequestHandler):
         pass
 
     def _send(self, body, code=200, ctype="text/html; charset=utf-8"):
-        data = body.encode()
+        data = body if isinstance(body, bytes) else body.encode()
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
