@@ -67,8 +67,10 @@ patched for Render.
 - [ ] `GET /bundle?task=verify_free_mint` → bundle **7,856 B**, 29.3%
       smaller than the 11,113 B full-catalog preload
 - [ ] `GET /bundle?task=backtest_strategy` → bundle **255 B**, 97.7%
-- [ ] `GET /chain` for Ink Koi → SUPERSEDES chain derives the current
-      verdict **indikasi** (free lane closed, refreshed 2026-11-15)
+- [ ] `GET /chain?entity=Ink Koi (INKOI)` → SUPERSEDES chain derives
+      the current verdict **indikasi** (free lane closed, refreshed
+      2026-11-15). Note the exact entity name includes the ticker;
+      plain `Ink Koi` returns "not found".
 - [ ] `GET /graph.json` → returns the graph as JSON (redesign endpoint)
 
 These are the same numbers the box serves today; anything else means
