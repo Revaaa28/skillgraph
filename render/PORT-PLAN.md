@@ -6,9 +6,33 @@ boxd machine can go back to sleep. The boxd setup is untouched and
 remains the fallback until every check below passes on Render.
 
 Everything in this folder was proven end-to-end on a local VM first
-(Ubuntu 24.04, glibc 2.39 — same lineage as both boxd and Render):
+(Ubuntu 24.04, glibc 2.39 — same lineage as boxd):
 the copied binary opened the copied store, `/readyz` answered, and
 the demo reproduced the exact judged numbers (see "Verification").
+
+## Deploy fix — bundled glibc (2026-11-15)
+
+The first real Render deploy failed at boot: Render's native image
+ships a glibc OLDER than 2.38, and the prebuilt graph-node requires
+GLIBC_2.38 (`version 'GLIBC_2.38' not found`). No dashboard setting can
+fix that, so the package now bundles noble's glibc 2.39 (from the
+libc6 + libgomp1 + libgcc-s1 .debs) under `render/runtime/glibc/`
+(~2.2 MB): `build.sh` stages it to `.sg-runtime/glibc/`, and
+`start.sh` launches the node through the bundled loader —
+`ld-linux-x86-64.so.2 --library-path "$RT/glibc:$RT/lib" graph-node` —
+so the binary runs against the glibc it was built for while every
+other library still comes from the staged runtime.
+
+Proof (Ubuntu 22.04 / glibc 2.35 chroot, standing in for Render's
+image): direct launch reproduces the exact GLIBC_2.38 error; the
+bundled-loader launch boots, `/readyz` answers, and traversals
+reproduce verify_free_mint 7,856 B and backtest_strategy 255 B
+against the bundled store. One chroot-only artifact to know about:
+slatedb derives its foyer cache shard count from the CPU count via
+sysinfo (/proc/stat) — a chroot without /proc mounted panics with
+"shards must be greater than zero"; Render's container has a normal
+/proc, and with /proc mounted the chroot run is clean (0 panics,
+200/200 load queries).
 
 ## What ships, and why it looks like this
 

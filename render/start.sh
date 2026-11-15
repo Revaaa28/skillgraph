@@ -36,7 +36,12 @@ export GRAPH_HTTP_ADDR=127.0.0.1:18443 GRAPH_ADMIN_ADDR=127.0.0.1:19091
 export RUST_MIN_STACK=33554432 RUST_LOG=info
 export GRAPH_USAGE_REPORT_ENABLED=false
 
-"$RT/graph-node" > "$WORK/node.log" 2>&1 &
+# Launch through the bundled glibc 2.39 loader: the binary requires
+# GLIBC_2.38 and Render's native image ships an older glibc, so the
+# system loader refuses to start it ("version `GLIBC_2.38' not found").
+# --library-path replaces LD_LIBRARY_PATH for this process, so it must
+# list both the bundled glibc dir and the GraphBLAS dir.
+"$RT/glibc/ld-linux-x86-64.so.2" --library-path "$RT/glibc:$RT/lib" "$RT/graph-node" > "$WORK/node.log" 2>&1 &
 NODE_PID=$!
 for i in $(seq 1 60); do
   if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:19091/readyz', timeout=2)" 2>/dev/null; then
