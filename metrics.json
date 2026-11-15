@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T04:35:14.554318+00:00",
+ "generated_at": "2026-11-15T07:57:01.323702+00:00",
  "bundles": {
   "verify_free_mint": {
    "bytes": 7856,
@@ -35,9 +35,9 @@
  "load_test": {
   "queries": 200,
   "errors": 0,
-  "total_s": 3.45,
-  "avg_ms": 17.27,
-  "max_ms": 38.29,
-  "min_ms": 8.72
+  "total_s": 5.6,
+  "avg_ms": 28.02,
+  "max_ms": 75.19,
+  "min_ms": 12.1
  }
 }

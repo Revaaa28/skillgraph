@@ -4,6 +4,15 @@ All numbers measured live on boxd `true-hare` (8 vCPU / 32 GiB) against the
 self-hosted HydraDB node, 2026-11-14 ~04:35 UTC. Raw data: `metrics.json`,
 `demo-output.txt`, `docs/mcp-exchange.log` in this repo.
 
+**Re-verified 2026-11-15** after a fresh re-seed from that morning's
+Mint RedCeh autocheck (board state 2026-11-15T06:26 UTC): graph counts
+identical (62 nodes / 73 edges), full preload identical (11,113 B),
+bundle sizes identical for all 5 task types, staleness demo identical
+(16 excluded at 0.05 h). Load re-runs on the just-woken machine: 200
+traversals, avg 25.84 ms and 28.02 ms, max 75.19 ms, 0 errors.
+`metrics.json` and `demo-output.txt` now hold the 2026-11-15 run;
+baseline-vs-improvement summary in `RESULTS.md`.
+
 ## Graph size (verified counts)
 
 | kind | count | | edge type | count |

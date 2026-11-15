@@ -8,7 +8,7 @@ CURRENT verdict (latest in SUPERSEDES chain):
  "vid": 604,
  "label": "indikasi",
  "detail": "First koi free for Agent ID holders, 1 per wallet \u2014 free pool exhausted | Free lane CLOSED (freeMinted 2,777/2,777 on-chain); paid mints 0.0004 BNB, max 5 per wallet | supply 2786/5555 on-chain",
- "ts": "2026-11-14T04:26:46.175Z",
+ "ts": "2026-11-15T06:26:31.979Z",
  "provenance": "Mint RedCeh autocheck - on-chain verification, board.json (BSC chain 56)"
 }
 
@@ -19,13 +19,13 @@ Ink Koi @ 2026-11-11T13:00:00Z: [berpotensi] First koi free for Agent ID holders
     (verdict ts 2026-11-11T12:00:00Z, provenance: Mint RedCeh board history (documented on-chain checks, 2026-11-11))
 Ink Koi @ 2026-11-13T00:00:00Z: [berpotensi] First koi free for Agent ID holders | free pool nearly gone - 135 of 2,777 free slots left (freeMinted 2,642/2,777)
     (verdict ts 2026-11-12T18:26:00Z, provenance: Mint RedCeh autocheck on-chain check, 2026-11-13 02:26 WITA cycle (documented))
-Ink Koi @ 2026-11-14T04:35:14.554318+00:00: [indikasi] First koi free for Agent ID holders, 1 per wallet — free pool exhausted | Free lane CLOSED (freeMinted 2,777/2,777 on-chain); paid mints 0.0004 BNB, max 5 per wallet | supply 2786/5555 on-chain
-    (verdict ts 2026-11-14T04:26:46.175Z, provenance: Mint RedCeh autocheck - on-chain verification, board.json (BSC chain 56))
+Ink Koi @ 2026-11-15T07:57:01.323702+00:00: [indikasi] First koi free for Agent ID holders, 1 per wallet — free pool exhausted | Free lane CLOSED (freeMinted 2,777/2,777 on-chain); paid mints 0.0004 BNB, max 5 per wallet | supply 2786/5555 on-chain
+    (verdict ts 2026-11-15T06:26:31.979Z, provenance: Mint RedCeh autocheck - on-chain verification, board.json (BSC chain 56))
 
 Floppy Agents @ 2026-11-12T06:00:00Z: [real] MODELED: free mint open for .ai Agent ID holders, 1 per wallet, supply filling
     (verdict ts 2026-11-12T00:00:00Z, provenance: MODELED history - pattern after the documented Ink Koi case; NOT live data)
-Floppy Agents @ 2026-11-14T04:35:14.554318+00:00: [indikasi] Free for .ai Agent ID holders, 1 per wallet | 0 BNB — gas only, while the free window lasted; supply is now at the 3,333 max, so no free mint remains | supply 3333/3333 on-chain
-    (verdict ts 2026-11-14T04:26:31.884Z, provenance: Mint RedCeh autocheck - on-chain verification, board.json (BSC chain 56))
+Floppy Agents @ 2026-11-15T07:57:01.323702+00:00: [indikasi] Free for .ai Agent ID holders, 1 per wallet | 0 BNB — gas only, while the free window lasted; supply is now at the 3,333 max, so no free mint remains | supply 3333/3333 on-chain
+    (verdict ts 2026-11-15T06:26:20.676Z, provenance: Mint RedCeh autocheck - on-chain verification, board.json (BSC chain 56))
 
 ========================================================================
 DEMO C - context bundles vs preloading the ENTIRE graph catalog
@@ -41,13 +41,13 @@ backtest_strategy    bundle    255 bytes | saved  97.7% | stale excluded: 0
 DEMO D - staleness guard firing (threshold tightened to 0.05h = 3 min)
 ========================================================================
 16 stale verdict(s) excluded at threshold 0.05h
-  Agent Cards: STALE: verdict from 2026-11-14T04:26:21.329Z is 0.1h old (threshold 0.05h) - excluded, re-verify before use
-  Agent Zet: STALE: verdict from 2026-11-14T04:26:24.519Z is 0.1h old (threshold 0.05h) - excluded, re-verify before use
-  Floppy Agents: STALE: verdict from 2026-11-14T04:26:31.884Z is 0.1h old (threshold 0.05h) - excluded, re-verify before use
+  Agent Cards: STALE: verdict from 2026-11-15T06:26:12.363Z is 1.5h old (threshold 0.05h) - excluded, re-verify before use
+  Agent Zet: STALE: verdict from 2026-11-15T06:26:14.765Z is 1.5h old (threshold 0.05h) - excluded, re-verify before use
+  Floppy Agents: STALE: verdict from 2026-11-15T06:26:20.676Z is 1.5h old (threshold 0.05h) - excluded, re-verify before use
 
 ========================================================================
 DEMO E - load sanity: 200 traversal queries (task -> skills -> tools)
 ========================================================================
-200 queries in 3.45s | avg 17.27 ms | max 38.29 ms | errors 0
+200 queries in 5.60s | avg 28.02 ms | max 75.19 ms | errors 0
 
 metrics written to metrics.json

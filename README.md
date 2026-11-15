@@ -4,6 +4,11 @@
 
 **Evidence, up front**
 
+- **Live demo, running now:** https://skillgraph.true-hare.boxd.sh —
+  run a task traversal and inspect a verdict chain against the real
+  graph in your browser (served by `webapp.py` in this repo)
+- Baseline vs improvement, with the Ink Koi learning timeline:
+  `RESULTS.md`
 - Stock `hydradb-mcp`, unmodified, driven end-to-end over MCP (6-node
   slice — see scope note) — raw exchange: `docs/mcp-exchange.log`
 - Consumed by a real LLM run — same question, with vs without the
